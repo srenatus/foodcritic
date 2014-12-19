@@ -140,7 +140,6 @@ module FoodCritic
     end
 
     # Find Chef resources of the specified type.
-    # TODO: Include blockless resources
     #
     # These are equivalent:
     #
@@ -159,7 +158,8 @@ module FoodCritic
 
       # TODO: Include nested resources (provider actions)
       no_actions = "[command/ident/@value != 'action']"
-      ast.xpath("//method_add_block[command/ident#{scope_type}]#{no_actions}")
+      
+      ast.xpath("//command[not(ancestor::method_add_block)][ident#{scope_type}] | //method_add_block[command/ident#{scope_type}]#{no_actions}")
     end
 
     # Helper to return a comparable version for a string.
@@ -284,9 +284,10 @@ module FoodCritic
     end
 
     # Return the type, e.g. 'package' for a given resource
+    # Accomodate blockless resources
     def resource_type(resource)
       raise_unless_xpath!(resource)
-      type = resource.xpath('string(command/ident/@value)')
+      type = resource.xpath('string(command/ident/@value | ident/@value)')
       if type.empty?
         fail ArgumentError, 'Provided AST node is not a resource'
       end
